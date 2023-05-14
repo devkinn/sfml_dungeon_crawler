@@ -7,6 +7,7 @@
 #include <vector>
 #include <random>
 #include <chrono>
+#include <iostream>
 
 // Game parameters
 
@@ -18,6 +19,8 @@ static const float cameraSizeY = 300.f;
 static const sf::Vector2u tileSize(16, 16);
 
 // Dungeon parameters
+
+static enum GameStatus { level1, level2, level3, gameover, victory };
 
 static const unsigned int minRoomSize = 14;
 static const unsigned int maxRoomSize = 16;
@@ -38,6 +41,21 @@ static const unsigned int dungeon3height = 100;
 static const std::string mapTileset = "./assets/tileset/tileset.png";
 static const std::string backgroundTileset = "./assets/background/background.png";
 
+static const std::string elfIdleAnim = "./assets/heroes/elf/elf_m_idle_anim_f";
+static const std::string elfRunAnim = "./assets/heroes/elf/elf_m_run_anim_f";
+
+static const std::string knightIdleAnim = "./assets/heroes/knight/knight_m_idle_anim_f";
+static const std::string knightRunAnim = "./assets/heroes/knight/knight_m_run_anim_f";
+
+static const std::string lizardIdleAnim = "./assets/heroes/lizard/lizard_m_idle_anim_f";
+static const std::string lizardRunAnim = "./assets/heroes/lizard/lizard_m_run_anim_f";
+
+static const std::string wizardIdleAnim = "./assets/heroes/wizzard/wizzard_m_idle_anim_f";
+static const std::string wizardRunAnim = "./assets/heroes/wizzard/wizzard_m_run_anim_f";
+
+static const std::string skeletonIdleAnim = "./assets/undeads/skeleton/skelet_idle_anim_f";
+static const std::string skeletonRunAnim = "./assets/undeads/skeleton/skelet_run_anim_f";
+
 // Functions
 
 int getRandomInRange(int min, int max) {
@@ -54,5 +72,6 @@ int getRandomInRange(int min, int max) {
 #include "dungeon_generator.hpp"
 #include "map_renderer.hpp"
 #include "animation.hpp"
-#include "player.hpp"
+#include "weapon.hpp"
+#include "character.hpp"
 #include "game_tracker.hpp"

@@ -12,6 +12,10 @@ int main()
     window.setFramerateLimit(144);
     window.setView(view);
 
+    // Setup game
+    GameStatus game_status = level1;
+    bool dungeon_generated = false;
+
     // Create first floor dungeon
     BSPDungeon dungeon1(dungeon1width, dungeon1height);
     dungeon1.generate();
@@ -25,14 +29,25 @@ int main()
     if(!map.load(mapTileset, tileSize, dungeon1.getRooms(), dungeon1.getCorridors())) return -1;
 
     // Create player
-    Player player;
+    PlayerCharacter player(wizardIdleAnim, wizardRunAnim, 8.f, 6);
     player.setPosition(dungeon1.getStartingPosition());
 
-    GameTracker gameTracker;
-    gameTracker.load(&player, dungeon1.getRooms(), dungeon1.getCorridors());
+
+    CollisionController collisionController;
+    collisionController.load(dungeon1.getRooms(), dungeon1.getCorridors());
+
+
+    Weapon* sword = new Weapon(10, 10, "./assets/weapons/weapon_katana.png");
+    player.equipWeapon(sword);
+
 
     // Game loop
     sf::Clock clock;
+
+
+    EnemyCharacter skeleton(skeletonIdleAnim, skeletonRunAnim, 5.f, 6, 3, 5);
+    skeleton.setPosition(player.getPosition());
+
     while (window.isOpen())
     {
         float dt = clock.restart().asSeconds();
@@ -54,11 +69,21 @@ int main()
 
         window.draw(background);
         window.draw(map);
-        player.update(dt, window);
-        gameTracker.checkForPlayerCollision(window);
+
+        player.update(dt);
+        skeleton.update(dt, player.getPosition(), player.getGlobalBounds());
+
+        window.draw(player.getSprite());
+        window.draw(skeleton.getSprite());
+        window.draw(player.getWeaponSprite());
+
+
+        collisionController.update(&player);
 
         window.display();
     }
+
+    delete sword;
 
     return 0;
 }

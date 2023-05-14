@@ -147,7 +147,8 @@
     <ClInclude Include="game_tracker.hpp" />
     <ClInclude Include="includer.hpp" />
     <ClInclude Include="map_renderer.hpp" />
-    <ClInclude Include="player.hpp" />
+    <ClInclude Include="character.hpp" />
+    <ClInclude Include="weapon.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

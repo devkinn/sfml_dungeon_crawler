@@ -7,6 +7,7 @@ private:
 	friend class BSPDungeon;
 	friend class MapRenderer;
 	friend class GameTracker;
+	friend class CollisionController;
 };
 
 class Corridor {
@@ -28,6 +29,7 @@ private:
 	friend class BSPDungeon;
 	friend class MapRenderer;
 	friend class GameTracker;
+	friend class CollisionController;
 };
 
 class Node {

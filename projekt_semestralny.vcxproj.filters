@@ -23,7 +23,7 @@
     <ClInclude Include="animation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="player.hpp">
+    <ClInclude Include="character.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dungeon_generator.hpp">
@@ -36,6 +36,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="game_tracker.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="weapon.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
