@@ -69,7 +69,7 @@ private:
 		for (sf::FloatRect* room : roomBounds) {
 
 			sf::Vector2f newPosition = getNewPosition(room);
-			float distance = std::sqrt(std::pow(point.x - newPosition.x, 2) + std::pow(point.y - newPosition.y, 2));
+			float distance = std::sqrt(std::pow(characterPosition.x - newPosition.x, 2) + std::pow(characterPosition.y - newPosition.y, 2));
 
 			if (distance < nearestDistance)
 			{
@@ -81,7 +81,7 @@ private:
 		for (sf::FloatRect* room : corridorBounds) {
 
 			sf::Vector2f newPosition = getNewPosition(room);
-			float distance = std::sqrt(std::pow(point.x - newPosition.x, 2) + std::pow(point.y - newPosition.y, 2));
+			float distance = std::sqrt(std::pow(characterPosition.x - newPosition.x, 2) + std::pow(characterPosition.y - newPosition.y, 2));
 
 			if (distance < nearestDistance)
 			{

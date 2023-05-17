@@ -1,7 +1,87 @@
 #pragma once
 
+class Healthbar : public sf::Drawable, public sf::Transformable
+{
+private:
+
+    sf::VertexArray m_vertices;
+    sf::Texture m_healthbar;
+
+    unsigned int maxHearts;
+
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const
+    {
+        // apply the transform
+        states.transform *= getTransform();
+
+        // apply the tileset texture
+        states.texture = &m_healthbar;
+
+        // draw the vertex array
+        target.draw(m_vertices, states);
+    }
+
+public:
+
+    Healthbar() : maxHearts(0) {}
+
+    bool load(const std::string& healthbar, unsigned int _maxHitPoints)
+    {
+        if (!m_healthbar.loadFromFile(healthbar)) return false;
+
+        maxHearts = _maxHitPoints / 2;
+        m_vertices.setPrimitiveType(sf::Quads);
+        m_vertices.resize(maxHearts * 4);
+
+        return true;
+    }
+
+    void resize(unsigned int _maxHitPoints)
+    {
+        maxHearts = _maxHitPoints / 2;
+        m_vertices.setPrimitiveType(sf::Quads);
+        m_vertices.resize(maxHearts * 4);
+    }
+
+    void update(const sf::Vector2f& starting_position, unsigned int _currentHitPoints)
+    {
+        unsigned int fullHearts = _currentHitPoints / 2;
+        unsigned int halfHeart = _currentHitPoints % 2 == 0 ? 0 : 1;
+
+        for (unsigned int i = 0; i < maxHearts; i++)
+        {
+            sf::Vertex* quad = &m_vertices[i * 4];
+
+            quad[0].position = sf::Vector2f(starting_position.x + (i * tileSize.x), starting_position.y);
+            quad[1].position = sf::Vector2f(starting_position.x + ((i + 1) * tileSize.x), starting_position.y);
+            quad[2].position = sf::Vector2f(starting_position.x + ((i + 1) * tileSize.x), starting_position.y + tileSize.y);
+            quad[3].position = sf::Vector2f(starting_position.x + (i * tileSize.x), starting_position.y + tileSize.y);
+
+            if (i < fullHearts) {
+                quad[0].texCoords = sf::Vector2f(0, 0);
+                quad[1].texCoords = sf::Vector2f(16, 0);
+                quad[2].texCoords = sf::Vector2f(16, 16);
+                quad[3].texCoords = sf::Vector2f(0, 16);
+            }
+            else if (i < fullHearts + halfHeart) {
+                quad[0].texCoords = sf::Vector2f(16, 0);
+                quad[1].texCoords = sf::Vector2f(32, 0);
+                quad[2].texCoords = sf::Vector2f(32, 16);
+                quad[3].texCoords = sf::Vector2f(16, 16);
+            }
+            else {
+                quad[0].texCoords = sf::Vector2f(32, 0);
+                quad[1].texCoords = sf::Vector2f(48, 0);
+                quad[2].texCoords = sf::Vector2f(48, 16);
+                quad[3].texCoords = sf::Vector2f(32, 16);
+            }
+        }
+    }
+};
+
 class Character {
 protected:
+
     Animation idle_animation;
     Animation run_animation;
     Animation* current_animation;
@@ -11,7 +91,8 @@ protected:
     bool isRunning;
     float movement_spd;
 
-    int hitPoints;
+    unsigned int maxHitPoints;
+    unsigned int currentHitPoints;
 
     void playIdleAnimation()
     {
@@ -57,8 +138,9 @@ protected:
     }
 
 public:
-    Character(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints) 
-        : idle_animation(0.1f, 4, true), run_animation(0.1f, 4, true), movement_spd(_movement_spd), hitPoints(_hitPoints), isRunning(false)
+
+    Character(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _maxHitPoints) 
+        : idle_animation(0.1f, 4, true), run_animation(0.1f, 4, true), movement_spd(_movement_spd), maxHitPoints(_maxHitPoints), currentHitPoints(_maxHitPoints), isRunning(false)
     {
         // Load textures for idle animation
         idle_animation.load(_idleAnim);
@@ -87,7 +169,10 @@ public:
 
 class PlayerCharacter : public Character {
 protected:
+
     Weapon* currentWeapon;
+
+    Healthbar healthbar;
 
     void getInputs(const float& deltaTime) {
         // Get inputs for movement
@@ -105,19 +190,19 @@ protected:
     }
 
 public:
-    PlayerCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints) 
-        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), currentWeapon(nullptr) {}
+    PlayerCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _maxHitPoints) 
+        : Character(_idleAnim, _runAnim, _movement_spd, _maxHitPoints), currentWeapon(nullptr)
+    {
+        healthbar.load(healthbarTexture, _maxHitPoints);
+    }
 
-    void equipWeapon(Weapon* weapon) { currentWeapon = weapon; }
-
-    sf::Sprite& getWeaponSprite() { return currentWeapon->getSprite(); }
-
-    void update(const float& deltaTime)
+    void update(const float& deltaTime, const sf::Vector2f viewportPosition)
     {
         isRunning = false;
 
         getInputs(deltaTime);
         handleAnimations();
+        healthbar.update(viewportPosition, currentHitPoints);
 
         // Set sprite texture based on animation currently playing
         current_animation->update(deltaTime);
@@ -125,6 +210,12 @@ public:
 
         currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x + 5, sprite.getPosition().y));
     }
+
+    void equipWeapon(Weapon* weapon) { currentWeapon = weapon; }
+
+    sf::Sprite& getWeaponSprite() { return currentWeapon->getSprite(); }
+    
+    Healthbar& getHealthbar() { return healthbar; }
 };
 
 class EnemyCharacter : public Character {
@@ -167,8 +258,6 @@ public:
     void update(const float& deltaTime, const sf::Vector2f& playerPosition, const sf::FloatRect& playerBounds)
     {
         isRunning = false;
-
-        //calculateMoveDirection(playerPosition, deltaTime);
 
         if (canMove()) {
             calculateMoveDirection(playerPosition, deltaTime);

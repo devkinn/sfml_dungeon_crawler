@@ -41,6 +41,9 @@ static const unsigned int dungeon3height = 100;
 static const std::string mapTileset = "./assets/tileset/tileset.png";
 static const std::string backgroundTileset = "./assets/background/background.png";
 
+static const std::string healthbarTexture = "./assets/healthbar/healthbar.png";
+
+
 static const std::string elfIdleAnim = "./assets/heroes/elf/elf_m_idle_anim_f";
 static const std::string elfRunAnim = "./assets/heroes/elf/elf_m_run_anim_f";
 

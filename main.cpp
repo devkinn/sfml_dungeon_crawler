@@ -70,10 +70,16 @@ int main()
         window.draw(background);
         window.draw(map);
 
-        player.update(dt);
+        sf::Vector2f healthBarPosition = view.getCenter() - view.getSize() / 2.f;
+        healthBarPosition.x += 10.f;
+        healthBarPosition.y += 10.f;
+
+
+        player.update(dt, healthBarPosition);
         skeleton.update(dt, player.getPosition(), player.getGlobalBounds());
 
         window.draw(player.getSprite());
+        window.draw(player.getHealthbar());
         window.draw(skeleton.getSprite());
         window.draw(player.getWeaponSprite());
 
