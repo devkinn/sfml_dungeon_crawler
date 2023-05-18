@@ -35,10 +35,13 @@
     <ClInclude Include="map_renderer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="game_tracker.hpp">
+    <ClInclude Include="collision_controller.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="weapon.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="enemy_controller.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

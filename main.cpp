@@ -45,8 +45,11 @@ int main()
     sf::Clock clock;
 
 
-    EnemyCharacter skeleton(skeletonIdleAnim, skeletonRunAnim, 5.f, 6, 3, 5);
-    skeleton.setPosition(player.getPosition());
+
+    EnemyController enemyController;
+    enemyController.loadEnemies(dungeon1EnemiesPath);
+    enemyController.spawnEnemies(dungeon1.getRooms(), dungeon1.getBossRoom());
+    
 
     while (window.isOpen())
     {
@@ -76,12 +79,20 @@ int main()
 
 
         player.update(dt, healthBarPosition);
-        skeleton.update(dt, player.getPosition(), player.getGlobalBounds());
 
         window.draw(player.getSprite());
         window.draw(player.getHealthbar());
-        window.draw(skeleton.getSprite());
         window.draw(player.getWeaponSprite());
+
+
+
+        enemyController.update(dt, &player);
+
+        std::vector<sf::Sprite> enemySprites = enemyController.getEnemySprites();
+
+        for (sf::Sprite& sprite : enemySprites) {
+            window.draw(sprite);
+        }
 
 
         collisionController.update(&player);

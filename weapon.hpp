@@ -2,8 +2,10 @@
 
 class Weapon {
 private:
+
 	unsigned int damage;
 	unsigned int attack_speed;
+
 	sf::Sprite sprite;
     sf::Texture texture;
 
@@ -21,7 +23,8 @@ public:
         sprite.setOrigin(sf::Vector2f(spriteSize.x * 0.5f, spriteSize.y));
     }
 
-    void setPosition(sf::Vector2f position) {
+    void setPosition(sf::Vector2f position) 
+    {
         sprite.setPosition(position);
     }
 

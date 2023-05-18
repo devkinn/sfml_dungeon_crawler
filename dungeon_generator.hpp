@@ -2,8 +2,18 @@
 
 class Room {
 private:
-	int x, y, width, height;
+
+	unsigned int x, y, width, height;
+
+public:
+
 	Room(int _x, int _y, int _width, int _height) : x(_x), y(_y), width(_width), height(_height) {}
+
+	unsigned int getWidth() const { return width; }
+	unsigned int getHeight() const { return height; }
+	unsigned int getX() const { return x; }
+	unsigned int getY() const { return y; }
+
 	friend class BSPDungeon;
 	friend class MapRenderer;
 	friend class CollisionController;
@@ -11,11 +21,15 @@ private:
 
 class Corridor {
 private:
+
 	int x1, y1, x2, y2;
 	int width, height;
-	Corridor(int _x1, int _y1, int _x2, int _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {
+
+	Corridor(int _x1, int _y1, int _x2, int _y2) : x1(_x1), y1(_y1), x2(_x2), y2(_y2) 
+	{
 		float angle = std::atan2(y2 - y1, x2 - x1);
 		float length = std::sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+
 		if (angle > 0) {
 			width = corridorWidth; 
 			height = length;
@@ -25,6 +39,7 @@ private:
 			height = corridorWidth;
 		}
 	}
+
 	friend class BSPDungeon;
 	friend class MapRenderer;
 	friend class CollisionController;
@@ -32,11 +47,15 @@ private:
 
 class Node {
 private:
+
 	int x, y, width, height;
+
 	Node* left;
 	Node* right;
 	Room* room;
+
 	Node(int _x, int _y, int _width, int _height) : x(_x), y(_y), width(_width), height(_height), left(nullptr), right(nullptr), room(nullptr) {}
+
 	friend class BSPDungeon;
 };
 
@@ -79,6 +98,7 @@ public:
 	~BSPDungeon() { reset(); }
 	void generate();
 	std::vector<Room*> getRooms() const { return rooms; }
+	Room* getBossRoom() const { return bossRoom; }
 	std::vector<Corridor*> getCorridors() const { return corridors; }
 	sf::Vector2f getStartingPosition() const { return sf::Vector2f((spawnRoom->x + spawnRoom->width / 2) * tileSize.x, (spawnRoom->y + spawnRoom->height / 2) * tileSize.y); }
 };

@@ -158,6 +158,8 @@ public:
         sprite.setOrigin(sf::Vector2f(spriteSize.x * 0.5f, spriteSize.y));
     }
 
+    void takeDamage(unsigned int damage) { currentHitPoints -= damage; }
+
     sf::Vector2f getPosition() const { return sprite.getPosition(); }
 
     sf::FloatRect getGlobalBounds() const { return sprite.getGlobalBounds(); }
@@ -227,12 +229,17 @@ protected:
     sf::Time moveTime;
     sf::Time idleTime;
 
+    unsigned int damage;
+    float playerDetectRange = 3;
+
     void calculateMoveDirection(const sf::Vector2f& playerPosition, const float& dt) 
     {
         sf::Vector2f position = getPosition();
         sf::Vector2f direction = playerPosition - position;
 
-        move(direction, dt);
+        float distance = std::sqrt(pow(position.x - playerPosition.x, 2) + pow(position.y - playerPosition.y, 2));
+
+        if ((distance / tileSize.x) <= playerDetectRange) move(direction, dt);
     }
 
     bool canAttack() { return attackClock.getElapsedTime() >= attackCooldown; }
@@ -252,21 +259,26 @@ protected:
     bool playerDetected(const sf::FloatRect& playerBounds) { return playerBounds.intersects(getGlobalBounds()); }
 
 public:
-    EnemyCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints, float _attack_cooldown, float _move_cooldown)
-        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), attackCooldown(sf::seconds(_attack_cooldown)), moveTime(sf::seconds(_move_cooldown)), idleTime(sf::seconds(2.f)) {}
+    EnemyCharacter(std::string _idleAnim, std::string _runAnim, unsigned int _damage, float _movement_spd, int _hitPoints, float _attack_cooldown, float _move_cooldown)
+        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), damage(_damage), attackCooldown(sf::seconds(_attack_cooldown)), moveTime(sf::seconds(_move_cooldown)), idleTime(sf::seconds(2.f)) 
+    {
+        attackClock.restart();
+        moveClock.restart();
+    }
 
-    void update(const float& deltaTime, const sf::Vector2f& playerPosition, const sf::FloatRect& playerBounds)
+    //void update(const float& deltaTime, const sf::Vector2f& playerPosition, const sf::FloatRect& playerBounds)
+    void update(const float& deltaTime, PlayerCharacter* player)
     {
         isRunning = false;
 
         if (canMove()) {
-            calculateMoveDirection(playerPosition, deltaTime);
+            calculateMoveDirection(player->getPosition(), deltaTime);
         }
 
 
         if (canAttack()) {
-            if (playerDetected(playerBounds)) {
-                std::cout << "Player has been hit by the enemy" << std::endl;
+            if (playerDetected(player->getGlobalBounds())) {
+                player->takeDamage(damage);
                 attackClock.restart();
             }
         }

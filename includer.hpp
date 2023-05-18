@@ -5,9 +5,12 @@
 #include <SFML/Graphics.hpp>
 #include <string>
 #include <vector>
+#include <map>
 #include <random>
 #include <chrono>
-#include <iostream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 // Game parameters
 
@@ -36,13 +39,20 @@ static const unsigned int dungeon2height = 80;
 static const unsigned int dungeon3width = 80;
 static const unsigned int dungeon3height = 100;
 
+
+static const unsigned int tilesPerOneCapacityPoint = 16;
+
+static const unsigned int tier1EnemyChance = 30;
+static const unsigned int tier2EnemyChance = 30;
+static const unsigned int tier3EnemyChance = 20;
+
+
 // Asset file locations
 
 static const std::string mapTileset = "./assets/tileset/tileset.png";
 static const std::string backgroundTileset = "./assets/background/background.png";
 
 static const std::string healthbarTexture = "./assets/healthbar/healthbar.png";
-
 
 static const std::string elfIdleAnim = "./assets/heroes/elf/elf_m_idle_anim_f";
 static const std::string elfRunAnim = "./assets/heroes/elf/elf_m_run_anim_f";
@@ -56,8 +66,7 @@ static const std::string lizardRunAnim = "./assets/heroes/lizard/lizard_m_run_an
 static const std::string wizardIdleAnim = "./assets/heroes/wizzard/wizzard_m_idle_anim_f";
 static const std::string wizardRunAnim = "./assets/heroes/wizzard/wizzard_m_run_anim_f";
 
-static const std::string skeletonIdleAnim = "./assets/undeads/skeleton/skelet_idle_anim_f";
-static const std::string skeletonRunAnim = "./assets/undeads/skeleton/skelet_run_anim_f";
+static const std::string dungeon1EnemiesPath = "./assets/dungeon1_enemies/";
 
 // Functions
 
@@ -77,4 +86,5 @@ int getRandomInRange(int min, int max) {
 #include "animation.hpp"
 #include "weapon.hpp"
 #include "character.hpp"
-#include "game_tracker.hpp"
+#include "collision_controller.hpp"
+#include "enemy_controller.hpp"
