@@ -92,7 +92,7 @@ protected:
     float movement_spd;
 
     unsigned int maxHitPoints;
-    unsigned int currentHitPoints;
+    int currentHitPoints;
 
     void playIdleAnimation()
     {
@@ -139,7 +139,7 @@ protected:
 
 public:
 
-    Character(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _maxHitPoints) 
+    Character(std::string _idleAnim, std::string _runAnim, float _movement_spd, unsigned int _maxHitPoints) 
         : idle_animation(0.1f, 4, true), run_animation(0.1f, 4, true), movement_spd(_movement_spd), maxHitPoints(_maxHitPoints), currentHitPoints(_maxHitPoints), isRunning(false)
     {
         // Load textures for idle animation
@@ -160,6 +160,8 @@ public:
 
     void takeDamage(unsigned int damage) { currentHitPoints -= damage; }
 
+    int getCurrentHP() const { return currentHitPoints; }
+
     sf::Vector2f getPosition() const { return sprite.getPosition(); }
 
     sf::FloatRect getGlobalBounds() const { return sprite.getGlobalBounds(); }
@@ -176,24 +178,40 @@ protected:
 
     Healthbar healthbar;
 
-    void getInputs(const float& deltaTime) {
+    sf::Clock attackClock;
+    sf::Time attackCooldown;
+
+    sf::Clock interactionClock;
+    sf::Time interactionCooldown = sf::seconds(0.5);
+
+    int offset;
+
+    void getInputs(const float& deltaTime) 
+    {
         // Get inputs for movement
         sf::Vector2f movement = sf::Vector2f(0.f, 0.f);
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) movement.x -= 1.f;
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) movement.x += 1.f;
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+            movement.x -= 1.f;
+            offset = -5;
+            currentWeapon->setTargetRotation(-45.f);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+            movement.x += 1.f;
+            offset = 5;
+            currentWeapon->setTargetRotation(45.f);
+        }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) movement.y -= 1.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) movement.y += 1.f;
 
-        move(movement, deltaTime);
+        currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x + offset, sprite.getPosition().y));
 
-        // Get inputs for attack
-        //if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
+        move(movement, deltaTime);
     }
 
 public:
     PlayerCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _maxHitPoints) 
-        : Character(_idleAnim, _runAnim, _movement_spd, _maxHitPoints), currentWeapon(nullptr)
+        : Character(_idleAnim, _runAnim, _movement_spd, _maxHitPoints), currentWeapon(nullptr), offset(0), attackCooldown(sf::seconds(0))
     {
         healthbar.load(healthbarTexture, _maxHitPoints);
     }
@@ -210,15 +228,77 @@ public:
         current_animation->update(deltaTime);
         sprite.setTexture(current_animation->getCurrentFrame());
 
-        currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x + 5, sprite.getPosition().y));
+        currentWeapon->playAttackAnimation(deltaTime);
     }
 
-    void equipWeapon(Weapon* weapon) { currentWeapon = weapon; }
+    Weapon* equipWeapon(Weapon* weapon) { 
+        Weapon* ptr = currentWeapon;
+        currentWeapon = weapon; 
+        attackCooldown = sf::seconds(currentWeapon->getAttackCooldown());
+        offset = 5;
+        currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x + offset, sprite.getPosition().y));
+        return ptr;
+    }
+
+    bool canAttack(const float& dt)
+    {
+        if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            if (attackClock.getElapsedTime() >= attackCooldown) {
+                attackClock.restart();
+                currentWeapon->resetAnim();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool interact()
+    {
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+            if (interactionClock.getElapsedTime() >= interactionCooldown) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void restartInteractClock() { interactionClock.restart(); }
 
     sf::Sprite& getWeaponSprite() { return currentWeapon->getSprite(); }
+
+    sf::FloatRect getWeaponHitbox() const
+    { 
+        sf::FloatRect defaultHitbox = currentWeapon->getHitbox();
+        if (offset < 0) defaultHitbox.left -= defaultHitbox.width;
+        return defaultHitbox;
+    }
     
     Healthbar& getHealthbar() { return healthbar; }
+
+    unsigned int getWeaponDamage() const { return currentWeapon->getDamage(); }
+
+    sf::FloatRect getHitbox() const 
+    { 
+        sf::FloatRect defaultBounds = getGlobalBounds();
+        return sf::FloatRect(defaultBounds.left, defaultBounds.top + defaultBounds.height / 2, defaultBounds.width, defaultBounds.height / 2);
+    }
 };
+
+void WeaponContainer::update(PlayerCharacter* player) {
+    if (player->interact()) {
+        for (auto it = activeWeapons.begin(); it != activeWeapons.end(); ++it) 
+        {
+            Weapon* weapon = *it;
+            if (weapon->getSprite().getGlobalBounds().intersects(player->getGlobalBounds())) 
+            {
+                activeWeapons.erase(it);
+                activeWeapons.push_back(player->equipWeapon(weapon));
+                player->restartInteractClock();
+                return;
+            }
+        }
+    }
+}
 
 class EnemyCharacter : public Character {
 protected:
@@ -230,7 +310,7 @@ protected:
     sf::Time idleTime;
 
     unsigned int damage;
-    float playerDetectRange = 3;
+    float playerDetectRange = 7;
 
     void calculateMoveDirection(const sf::Vector2f& playerPosition, const float& dt) 
     {
@@ -259,14 +339,13 @@ protected:
     bool playerDetected(const sf::FloatRect& playerBounds) { return playerBounds.intersects(getGlobalBounds()); }
 
 public:
-    EnemyCharacter(std::string _idleAnim, std::string _runAnim, unsigned int _damage, float _movement_spd, int _hitPoints, float _attack_cooldown, float _move_cooldown)
-        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), damage(_damage), attackCooldown(sf::seconds(_attack_cooldown)), moveTime(sf::seconds(_move_cooldown)), idleTime(sf::seconds(2.f)) 
+    EnemyCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints, float _attack_cooldown, float _move_cooldown)
+        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), damage(1), attackCooldown(sf::seconds(_attack_cooldown)), moveTime(sf::seconds(_move_cooldown)), idleTime(sf::seconds(2.f)) 
     {
         attackClock.restart();
         moveClock.restart();
     }
 
-    //void update(const float& deltaTime, const sf::Vector2f& playerPosition, const sf::FloatRect& playerBounds)
     void update(const float& deltaTime, PlayerCharacter* player)
     {
         isRunning = false;
@@ -277,7 +356,7 @@ public:
 
 
         if (canAttack()) {
-            if (playerDetected(player->getGlobalBounds())) {
+            if (playerDetected(player->getHitbox())) {
                 player->takeDamage(damage);
                 attackClock.restart();
             }

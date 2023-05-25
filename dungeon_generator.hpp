@@ -99,7 +99,9 @@ public:
 	void generate();
 	std::vector<Room*> getRooms() const { return rooms; }
 	Room* getBossRoom() const { return bossRoom; }
+	Room* getSpawnRoom() const { return spawnRoom; }
 	std::vector<Corridor*> getCorridors() const { return corridors; }
+	std::vector<Room*> getChestRooms() const { return chestRooms; }
 	sf::Vector2f getStartingPosition() const { return sf::Vector2f((spawnRoom->x + spawnRoom->width / 2) * tileSize.x, (spawnRoom->y + spawnRoom->height / 2) * tileSize.y); }
 };
 

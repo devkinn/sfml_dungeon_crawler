@@ -147,12 +147,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.hpp" />
+    <ClInclude Include="chest.hpp" />
     <ClInclude Include="dungeon_generator.hpp" />
     <ClInclude Include="enemy_controller.hpp" />
     <ClInclude Include="collision_controller.hpp" />
     <ClInclude Include="includer.hpp" />
     <ClInclude Include="map_renderer.hpp" />
     <ClInclude Include="character.hpp" />
+    <ClInclude Include="utilities.hpp" />
     <ClInclude Include="weapon.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

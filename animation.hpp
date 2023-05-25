@@ -45,7 +45,10 @@ void Animation::update(float deltaTime)
 
         if (current_frame == frames.size()) {
             if (loop) current_frame = 0;
-            else isPlaying = false;
+            else {
+                isPlaying = false;
+                current_frame = frames.size() - 1;
+            }
         }
     }
 }
