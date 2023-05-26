@@ -79,6 +79,7 @@ public:
 
 	void spawnChests(const std::vector<Room*> chestRooms)
 	{
+		reset();
 
 		for (const Room* room : chestRooms)
 		{

@@ -44,7 +44,7 @@ static const float playerImmunityTime = 1.5;
 
 // Enemy Parameters
 
-static const unsigned int tilesPerOneCapacityPoint = 16;
+static const unsigned int tilesPerOneCapacityPoint = 24;
 
 static const unsigned int tier1EnemyChance = 30;
 static const unsigned int tier2EnemyChance = 30;
@@ -61,7 +61,7 @@ static const unsigned int tier3EnemyHP = 35;
 // Weapon parameters
 
 static const unsigned int fastWeaponDamage = 5;
-static const float fastWeaponAttackCooldown = 0.2;
+static const float fastWeaponAttackCooldown = 0.1;
 
 static const unsigned int mediumWeaponDamage = 10;
 static const float mediumWeaponAttackCooldown = 0.2;

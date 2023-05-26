@@ -8,6 +8,7 @@ private:
 	sf::RenderWindow& window;
 	sf::Font font;
 	sf::Text text;
+	sf::Text index;
 
 public:
 
@@ -21,6 +22,11 @@ public:
 		text.setCharacterSize(32);
 		text.setScale(.2f, .2f);
 		text.setString("You Lost\nPress [ENTER] to restart the game");
+
+		index.setFont(font);
+		index.setCharacterSize(24);
+		index.setScale(.2f, .2f);
+		index.setString("Autor:\nJakub Kaczmarek 152082");
 	}
 
 	bool handleInput()
@@ -40,8 +46,11 @@ public:
 		sf::FloatRect textBounds = text.getLocalBounds();
 		text.setOrigin(textBounds.left + textBounds.width / 2.0f, textBounds.top + textBounds.height / 2.0f);
 		text.setPosition(viewportCenter.x, viewportCenter.y);
+
+		index.setPosition(viewportCenter.x - viewport.getSize().x / 2 + 10.f, viewportCenter.y - viewport.getSize().y / 2 + 10.f);
 		
 		window.draw(text);
+		window.draw(index);
 	}
 };
 
