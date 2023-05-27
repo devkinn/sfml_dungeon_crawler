@@ -42,6 +42,10 @@ static const unsigned int dungeon3height = 100;
 
 static const float playerImmunityTime = 1.5;
 
+// Potions
+
+static const std::string healPotionTexture = "./assets/potions/heal_potion.png";
+
 // Enemy Parameters
 
 static const unsigned int tilesPerOneCapacityPoint = 24;
@@ -103,7 +107,8 @@ static const std::string wizardRunAnim = "./assets/heroes/wizzard/wizzard_m_run_
 
 // Functions
 
-int getRandomInRange(int min, int max) {
+int getRandomInRange(int min, int max) 
+{
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator(seed);
 
@@ -118,6 +123,7 @@ int getRandomInRange(int min, int max) {
 #include "map_renderer.hpp"
 #include "animation.hpp"
 #include "weapon.hpp"
+#include "items.hpp"
 #include "character.hpp"
 #include "chest.hpp"
 #include "collision_controller.hpp"
