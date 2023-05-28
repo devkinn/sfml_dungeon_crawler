@@ -158,9 +158,11 @@ public:
         sprite.setOrigin(sf::Vector2f(spriteSize.x * 0.5f, spriteSize.y));
     }
 
-    void takeDamage(unsigned int damage) { currentHitPoints -= damage; }
+    virtual void takeDamage(unsigned int damage) { currentHitPoints -= damage; }
 
     int getCurrentHP() const { return currentHitPoints; }
+
+    int getMaxHP() const { return maxHitPoints; }
 
     sf::Vector2f getPosition() const { return sprite.getPosition(); }
 
@@ -184,7 +186,56 @@ protected:
     sf::Clock interactionClock;
     sf::Time interactionCooldown = sf::seconds(0.5);
 
-    int offset;
+    sf::Clock potionUseClock;
+    sf::Time potionUseCooldown = sf::seconds(0.5);
+
+    sf::Clock speedEffectClock;
+    sf::Time speedEffectTime = sf::seconds(3);
+
+    sf::Clock invincibilityEffectClock;
+    sf::Time invincibilityEffectTime = sf::seconds(3);
+
+    sf::Clock playerImmunityClock;
+    sf::Time playerImmunityTime = sf::seconds(2);
+
+    unsigned int healingPotions = 0;
+    unsigned int speedPotions = 0;
+    unsigned int invincibilityPotions = 0;
+
+    float boostedMvSpeed;
+    float normalMvSpeed;
+
+    bool potionUsed = false;
+
+    void useHealingPotion()
+    {
+        if (healingPotions > 0 && currentHitPoints < maxHitPoints && potionUseClock.getElapsedTime() >= potionUseCooldown) {
+            currentHitPoints++;
+            healingPotions--;
+            potionUseClock.restart();
+        }
+    }
+
+    void useSpeedPotion() 
+    {
+        if (speedPotions > 0 && potionUseClock.getElapsedTime() >= potionUseCooldown) {
+            potionUsed = true;
+            movement_spd = boostedMvSpeed;
+            speedPotions--;
+            potionUseClock.restart();
+            speedEffectClock.restart();
+        }
+    }
+
+    void useInvincibilityPotion()
+    {
+        if (invincibilityPotions > 0 && potionUseClock.getElapsedTime() >= potionUseCooldown) {
+            potionUsed = true;
+            invincibilityPotions--;
+            potionUseClock.restart();
+            invincibilityEffectClock.restart();
+        }
+    }
 
     void getInputs(const float& deltaTime) 
     {
@@ -193,27 +244,39 @@ protected:
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
             movement.x -= 1.f;
-            offset = -5;
-            currentWeapon->setTargetRotation(-45.f);
+            currentWeapon->setTargetRotation(-80.f);
+            currentWeapon->setScale(sf::Vector2f(-1, 1));
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
             movement.x += 1.f;
-            offset = 5;
-            currentWeapon->setTargetRotation(45.f);
+            currentWeapon->setTargetRotation(80.f);
+            currentWeapon->setScale(sf::Vector2f(1, 1));
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) movement.y -= 1.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) movement.y += 1.f;
 
-        currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x + offset, sprite.getPosition().y));
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num1)) useHealingPotion();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num2)) useSpeedPotion();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Num3)) useInvincibilityPotion();
 
+        currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x, sprite.getPosition().y - 3.f));
+
+        if (speedEffectClock.getElapsedTime() > speedEffectTime) {
+            movement_spd = normalMvSpeed;
+        }
+        else if (potionUsed) {
+            movement_spd = boostedMvSpeed;
+        }
         move(movement, deltaTime);
     }
 
 public:
     PlayerCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _maxHitPoints) 
-        : Character(_idleAnim, _runAnim, _movement_spd, _maxHitPoints), currentWeapon(nullptr), offset(0), attackCooldown(sf::seconds(0))
+        : Character(_idleAnim, _runAnim, _movement_spd, _maxHitPoints), currentWeapon(nullptr), attackCooldown(sf::seconds(0))
     {
         healthbar.load(healthbarTexture, _maxHitPoints);
+        boostedMvSpeed = movement_spd + 1.5f;
+        normalMvSpeed = movement_spd;
     }
 
     void update(const float& deltaTime, const sf::Vector2f viewportPosition)
@@ -231,12 +294,20 @@ public:
         currentWeapon->playAttackAnimation(deltaTime);
     }
 
-    Weapon* equipWeapon(Weapon* weapon) { 
+    virtual void takeDamage(unsigned int damage) 
+    { 
+        if (invincibilityEffectClock.getElapsedTime() > invincibilityEffectTime && playerImmunityClock.getElapsedTime() > playerImmunityTime) {
+            currentHitPoints -= damage;
+            playerImmunityClock.restart();
+        }
+    }
+
+    Weapon* equipWeapon(Weapon* weapon) 
+    { 
         Weapon* ptr = currentWeapon;
         currentWeapon = weapon; 
         attackCooldown = sf::seconds(currentWeapon->getAttackCooldown());
-        offset = 5;
-        currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x + offset, sprite.getPosition().y));
+        currentWeapon->setPosition(sf::Vector2f(sprite.getPosition().x, sprite.getPosition().y - 3.f));
         return ptr;
     }
 
@@ -266,10 +337,13 @@ public:
 
     sf::Sprite& getWeaponSprite() { return currentWeapon->getSprite(); }
 
-    sf::FloatRect getWeaponHitbox() const
-    { 
-        sf::FloatRect defaultHitbox = currentWeapon->getHitbox();
-        if (offset < 0) defaultHitbox.left -= defaultHitbox.width;
+    sf::FloatRect getWeaponHitbox()
+    {
+        if (currentWeapon->getTargetRotation() > 0) {
+            sf::FloatRect defaultHitbox(sf::Vector2f(getPosition().x - 5.f, getPosition().y - currentWeapon->getWeaponLength()), sf::Vector2f(currentWeapon->getWeaponLength() + 5.f, currentWeapon->getWeaponLength()));
+            return defaultHitbox;
+        }
+        sf::FloatRect defaultHitbox(sf::Vector2f(getPosition().x - currentWeapon->getWeaponLength(), getPosition().y - currentWeapon->getWeaponLength()), sf::Vector2f(currentWeapon->getWeaponLength() + 5.f, currentWeapon->getWeaponLength()));
         return defaultHitbox;
     }
     
@@ -282,6 +356,23 @@ public:
         sf::FloatRect defaultBounds = getGlobalBounds();
         return sf::FloatRect(defaultBounds.left, defaultBounds.top + defaultBounds.height / 2, defaultBounds.width, defaultBounds.height / 2);
     }
+
+    void addItem(Item* item)
+    {
+        if (HealingPotion* derived = dynamic_cast<HealingPotion*>(item)) {
+            healingPotions++;
+        }
+        else if (SpeedPotion* derived = dynamic_cast<SpeedPotion*>(item)) {
+            speedPotions++;
+        }
+        else if (InvincibilityPotion* derived = dynamic_cast<InvincibilityPotion*>(item)) {
+            invincibilityPotions++;
+        }
+    }
+
+    unsigned int getHealingPotions() const { return healingPotions; }
+    unsigned int getSpeedPotions() const { return speedPotions; }
+    unsigned int getInvinPotions() const { return invincibilityPotions; }
 };
 
 void WeaponContainer::update(PlayerCharacter* player) {
@@ -300,10 +391,28 @@ void WeaponContainer::update(PlayerCharacter* player) {
     }
 }
 
+void ItemContainer::update(PlayerCharacter* player) {
+    if (player->interact()) {
+        for (auto it = items.begin(); it != items.end(); ++it)
+        {
+            auto item = *it;
+            if (item->getSprite().getGlobalBounds().intersects(player->getGlobalBounds()))
+            {
+                items.erase(it);
+                player->addItem(item);
+                player->restartInteractClock();
+                return;
+            }
+        }
+    }
+}
+
+
+
+
+
 class EnemyCharacter : public Character {
 protected:
-    sf::Clock attackClock;
-    sf::Time attackCooldown;
 
     sf::Clock moveClock;
     sf::Time moveTime;
@@ -311,6 +420,10 @@ protected:
 
     unsigned int damage;
     float playerDetectRange = 7;
+
+    sf::RectangleShape healthbar;
+
+    float healthbarSize;
 
     void calculateMoveDirection(const sf::Vector2f& playerPosition, const float& dt) 
     {
@@ -321,8 +434,6 @@ protected:
 
         if ((distance / tileSize.x) <= playerDetectRange) move(direction, dt);
     }
-
-    bool canAttack() { return attackClock.getElapsedTime() >= attackCooldown; }
 
     bool canMove() 
     { 
@@ -339,11 +450,19 @@ protected:
     bool playerDetected(const sf::FloatRect& playerBounds) { return playerBounds.intersects(getGlobalBounds()); }
 
 public:
-    EnemyCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints, float _attack_cooldown, float _move_cooldown)
-        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), damage(1), attackCooldown(sf::seconds(_attack_cooldown)), moveTime(sf::seconds(_move_cooldown)), idleTime(sf::seconds(2.f)) 
+    EnemyCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints, float _healthbarSize = 12.f)
+        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), damage(1), healthbarSize(_healthbarSize)
     {
-        attackClock.restart();
+        int move_time = getRandomInRange(5, 20);
+        int idle_time = getRandomInRange(0, 5);
+
         moveClock.restart();
+
+        moveTime = sf::seconds(move_time);
+        idleTime = sf::seconds(idle_time);
+
+        healthbar = sf::RectangleShape(sf::Vector2f(healthbarSize, 1));
+        healthbar.setFillColor(sf::Color::Red);
     }
 
     void update(const float& deltaTime, PlayerCharacter* player)
@@ -354,12 +473,8 @@ public:
             calculateMoveDirection(player->getPosition(), deltaTime);
         }
 
-
-        if (canAttack()) {
-            if (playerDetected(player->getHitbox())) {
-                player->takeDamage(damage);
-                attackClock.restart();
-            }
+        if (playerDetected(player->getHitbox())) {
+            player->takeDamage(damage);
         }
 
         handleAnimations();
@@ -367,5 +482,11 @@ public:
         // Set sprite texture based on animation currently playing
         current_animation->update(deltaTime);
         sprite.setTexture(current_animation->getCurrentFrame());
+
+        float healthPercentage = (float)currentHitPoints / (float)maxHitPoints;
+        healthbar.setSize(sf::Vector2f(healthbarSize * healthPercentage, 1));
+        healthbar.setPosition(sf::Vector2f(getPosition().x - healthbarSize / 2, getPosition().y - 18.f));
     }
+
+    sf::RectangleShape& getHealthbar() { return healthbar; }
 };

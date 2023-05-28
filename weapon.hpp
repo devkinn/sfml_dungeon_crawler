@@ -15,7 +15,9 @@ private:
     bool animationComplete = false;
 
     const float originalRotation = 0.0f;
-    float targetRotation = 45.0f;
+    float targetRotation = 80.0f;
+
+    float length;
 
 public:
 
@@ -29,6 +31,8 @@ public:
         // Set sprite's origin to it's center on x axis
         sf::Vector2f spriteSize(texture.getSize().x, texture.getSize().y);
         sprite.setOrigin(sf::Vector2f(spriteSize.x * 0.5f, spriteSize.y));
+
+        length = sprite.getGlobalBounds().height;
     }
 
     void setPosition(sf::Vector2f position) 
@@ -47,8 +51,10 @@ public:
     sf::FloatRect getHitbox() const
     {
         sf::FloatRect defaultBounds = sprite.getGlobalBounds();
-        return sf::FloatRect(defaultBounds.left, defaultBounds.top, defaultBounds.height, defaultBounds.height);
+        return sf::FloatRect(defaultBounds.left, defaultBounds.top, length, length);
     }
+
+    float getWeaponLength() const { return length; }
 
     void resetAnim() {
         animationComplete = false;
@@ -78,6 +84,10 @@ public:
     }
 
     void setTargetRotation(const float rotation) { targetRotation = rotation; }
+
+    float getTargetRotation() const { return targetRotation; }
+
+    void setScale(sf::Vector2f scale) { sprite.setScale(scale); }
 };
 
 class WeaponContainer {
@@ -104,6 +114,14 @@ public:
         Weapon* ptr = activeWeapons[index];
         activeWeapons.erase(activeWeapons.begin() + index);
         return ptr;
+    }
+
+    void passWeaponsToAnotherContainer(WeaponContainer* container)
+    {
+        for (auto weapon : activeWeapons) {
+            container->addWeapon(weapon);
+        }
+        activeWeapons.clear();
     }
 
     unsigned int getCurrentSize() const { return activeWeapons.size(); }
@@ -142,6 +160,13 @@ public:
                 }
             }
         }
+
+    }
+
+    Weapon* getRandomWeapon() 
+    {
+        int weaponIndex = getRandomInRange(0, activeWeapons.size() - 1);
+        return removeByIndex(weaponIndex);
     }
 
     std::vector<sf::Sprite> getWeaponSprites()

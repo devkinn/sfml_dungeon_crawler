@@ -50,5 +50,11 @@
     <ClInclude Include="chest.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="items.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="interface_elements.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -38,13 +38,16 @@ static const unsigned int dungeon2height = 80;
 static const unsigned int dungeon3width = 80;
 static const unsigned int dungeon3height = 100;
 
-// Player parameters
-
-static const float playerImmunityTime = 1.5;
-
 // Potions
 
 static const std::string healPotionTexture = "./assets/potions/heal_potion.png";
+static const unsigned int healPotionChance = 5;
+
+static const std::string speedPotionTexture = "./assets/potions/speed_potion.png";
+static const unsigned int speedPotionChance = 10;
+
+static const std::string invincibilityPotionTexture = "./assets/potions/invincibility_potion.png";
+static const unsigned int invincibilityPotionChance = 15;
 
 // Enemy Parameters
 
@@ -62,16 +65,25 @@ static const unsigned int tier1EnemyHP = 15;
 static const unsigned int tier2EnemyHP = 25;
 static const unsigned int tier3EnemyHP = 35;
 
+static const unsigned int boss1HP = 100;
+static const float boss1MvSpeed = 6.f;
+
+static const unsigned int boss2HP = 150;
+static const float boss2MvSpeed = 6.5f;
+
+static const unsigned int boss3HP = 200;
+static const float boss3MvSpeed = 7.f;
+
 // Weapon parameters
 
 static const unsigned int fastWeaponDamage = 5;
-static const float fastWeaponAttackCooldown = 0.1;
+static const float fastWeaponAttackCooldown = 0.2;
 
 static const unsigned int mediumWeaponDamage = 10;
-static const float mediumWeaponAttackCooldown = 0.2;
+static const float mediumWeaponAttackCooldown = 0.3;
 
-static const unsigned int slowWeaponDamage = 18;
-static const float slowWeaponAttackCooldown = 0.6;
+static const unsigned int slowWeaponDamage = 15;
+static const float slowWeaponAttackCooldown = 0.4;
 
 // Asset file locations
 
@@ -128,4 +140,5 @@ int getRandomInRange(int min, int max)
 #include "chest.hpp"
 #include "collision_controller.hpp"
 #include "enemy_controller.hpp"
+#include "interface_elements.hpp"
 #include "utilities.hpp"

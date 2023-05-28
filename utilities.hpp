@@ -2,58 +2,6 @@
 
 enum GameState { gameLoop, gameEndWin, gameEndLost, exitMenu };
 
-class EndGameScreen {
-private:
-
-	sf::RenderWindow& window;
-	sf::Font font;
-	sf::Text text;
-	sf::Text index;
-
-public:
-
-	EndGameScreen(sf::RenderWindow& window) : window(window)
-	{
-		if (!font.loadFromFile("./assets/fonts/font.ttf")) {
-			// Handle font loading error
-		}
-
-		text.setFont(font);
-		text.setCharacterSize(32);
-		text.setScale(.2f, .2f);
-		text.setString("You Lost\nPress [ENTER] to restart the game");
-
-		index.setFont(font);
-		index.setCharacterSize(24);
-		index.setScale(.2f, .2f);
-		index.setString("Autor:\nJakub Kaczmarek 152082");
-	}
-
-	bool handleInput()
-	{
-		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) window.close();
-		return sf::Keyboard::isKeyPressed(sf::Keyboard::Enter);
-	}
-
-	void setText(const std::string& _text)
-	{
-		text.setString(_text);
-	}
-
-	void render(sf::View& viewport)
-	{
-		sf::Vector2f viewportCenter = viewport.getCenter();
-		sf::FloatRect textBounds = text.getLocalBounds();
-		text.setOrigin(textBounds.left + textBounds.width / 2.0f, textBounds.top + textBounds.height / 2.0f);
-		text.setPosition(viewportCenter.x, viewportCenter.y);
-
-		index.setPosition(viewportCenter.x - viewport.getSize().x / 2 + 10.f, viewportCenter.y - viewport.getSize().y / 2 + 10.f);
-		
-		window.draw(text);
-		window.draw(index);
-	}
-};
-
 class Game {
 private:
 
@@ -73,8 +21,10 @@ private:
 	WeaponContainer* weaponPool;
 	WeaponContainer* weaponsOnGround;
 	ChestContainer* chestContainer;
+	ItemContainer* potionContainer;
 
 	EndGameScreen* endGameScreen;
+	PotionStatus* potionStatus;
 
 	sf::Clock frameClock;
 
@@ -94,6 +44,8 @@ public:
 
 		endGameScreen = new EndGameScreen(window);
 
+		potionStatus = new PotionStatus(window);
+
 		restartGame();
 	}
 
@@ -109,9 +61,11 @@ public:
 		delete weaponPool;
 		delete weaponsOnGround;
 		delete chestContainer;
+		delete potionContainer;
+		delete potionStatus;
 	}
 
-	void generateDungeon(unsigned int width, unsigned int height, std::string enemyTexturePath)
+	void generateDungeon(unsigned int width, unsigned int height, std::string enemyTexturePath, unsigned int bossHP, float bossMvSpeed)
 	{
 		delete currentDungeon;
 		currentDungeon = new BSPDungeon(width, height);
@@ -124,9 +78,13 @@ public:
 		delete enemyController;
 		enemyController = new EnemyController;
 		enemyController->loadEnemies(enemyTexturePath);
-		enemyController->spawnEnemies(currentDungeon->getRooms(), currentDungeon->getBossRoom(), currentDungeon->getSpawnRoom());
+		enemyController->spawnEnemies(currentDungeon->getRooms(), currentDungeon->getBossRoom(), currentDungeon->getSpawnRoom(), bossHP, bossMvSpeed);
+
+		weaponsOnGround->passWeaponsToAnotherContainer(weaponPool);
 
 		chestContainer->spawnChests(currentDungeon->getChestRooms());
+
+		potionContainer->reset();
 
 		playerCharacter->setPosition(currentDungeon->getStartingPosition());
 	}
@@ -146,7 +104,7 @@ public:
 	{
 		delete playerCharacter;
 		playerCharacter = new PlayerCharacter(idleAnimPath, runAnimPath, mv_speed, HP);
-		playerCharacter->equipWeapon(new Weapon(mediumWeaponDamage, mediumWeaponAttackCooldown, "./assets/weapons/medium/weapon_baton_with_spikes.png"));
+		playerCharacter->equipWeapon(weaponPool->getRandomWeapon());
 	}
 
 	void drawSprites()
@@ -169,9 +127,28 @@ public:
 			window.draw(sprite);
 		}
 
+		std::vector<sf::Sprite> potionSprites = potionContainer->getSprites();
+		for (sf::Sprite& sprite : potionSprites) {
+			window.draw(sprite);
+		}
+
+		std::vector<sf::RectangleShape> enemyHealthbars = enemyController->getEnemyHealthbars();
+		for (sf::RectangleShape& rect : enemyHealthbars) {
+			window.draw(rect);
+		}
+
+		sf::RectangleShape weaponH(sf::Vector2f(playerCharacter->getWeaponHitbox().width, playerCharacter->getWeaponHitbox().height));
+		weaponH.setPosition(sf::Vector2f(playerCharacter->getWeaponHitbox().left, playerCharacter->getWeaponHitbox().top));
+		weaponH.setOutlineThickness(1.f);
+		weaponH.setFillColor(sf::Color::Transparent);
+		weaponH.setOutlineColor(sf::Color::Blue);
+		window.draw(weaponH);
+
 		window.draw(playerCharacter->getSprite());
 		window.draw(playerCharacter->getWeaponSprite());
 		window.draw(playerCharacter->getHealthbar());
+		
+		potionStatus->render(view, playerCharacter);
 	}
 
 	void updateModules(const float& dt)
@@ -185,7 +162,9 @@ public:
 		chestContainer->update(dt, playerCharacter);
 		weaponsOnGround->update(playerCharacter);
 
-		enemyController->update(dt, playerCharacter, collisionController);
+		potionContainer->update(playerCharacter);
+
+		enemyController->update(dt, playerCharacter, collisionController, potionContainer);
 	}
 
 	void gameStateUpdater() 
@@ -201,15 +180,15 @@ public:
 
 		if (generateLevel || currentDungeon == nullptr) {
 			if (currentLevel == 1) {
-				generateDungeon(dungeon1width, dungeon1height, dungeon1EnemiesDir);
+				generateDungeon(dungeon1width, dungeon1height, dungeon1EnemiesDir, boss1HP, boss1MvSpeed);
 				createMap(dungeon1Tileset, background1Tileset, tileSize, 60, 80);
 			}
 			else if (currentLevel == 2) {
-				generateDungeon(dungeon2width, dungeon2height, dungeon2EnemiesDir);
+				generateDungeon(dungeon2width, dungeon2height, dungeon2EnemiesDir, boss2HP, boss2MvSpeed);
 				createMap(dungeon2Tileset, background2Tileset, tileSize, 80, 100);
 			}
 			else if (currentLevel == 3) {
-				generateDungeon(dungeon3width, dungeon3height, dungeon3EnemiesDir);
+				generateDungeon(dungeon3width, dungeon3height, dungeon3EnemiesDir, boss3HP, boss3MvSpeed);
 				createMap(dungeon3Tileset, background3Tileset, tileSize, 100, 120);
 			}
 			else {
@@ -236,6 +215,9 @@ public:
 
 		delete chestContainer;
 		chestContainer = new ChestContainer(weaponPool, weaponsOnGround);
+
+		delete potionContainer;
+		potionContainer = new ItemContainer;
 
 		createPlayer(knightIdleAnim, knightRunAnim, 8, 6);
 	}

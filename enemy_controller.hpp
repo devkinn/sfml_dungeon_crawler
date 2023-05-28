@@ -31,19 +31,19 @@ private:
 			unsigned int enemyTier = getRandomInRange(0, 100);
 
 			if (enemyTier < tier1EnemyChance) {
-				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(1) + "/idle", enemyContainer.at(1) + "/run", tier1EnemyMvSpeed, tier1EnemyHP, 5, 20));
+				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(1) + "/idle", enemyContainer.at(1) + "/run", tier1EnemyMvSpeed, tier1EnemyHP));
 				index += 1;
 			}
 			else if (enemyTier < tier2EnemyChance + tier1EnemyChance) {
-				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(2) + "/idle", enemyContainer.at(2) + "/run", tier2EnemyMvSpeed, tier2EnemyHP, 5, 20));
+				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(2) + "/idle", enemyContainer.at(2) + "/run", tier2EnemyMvSpeed, tier2EnemyHP));
 				index += 2;
 			}
 			else if (enemyTier < tier3EnemyChance + tier2EnemyChance + tier1EnemyChance) {
-				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(3) + "/idle", enemyContainer.at(3) + "/run", tier3EnemyMvSpeed, tier3EnemyHP, 5, 20));
+				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(3) + "/idle", enemyContainer.at(3) + "/run", tier3EnemyMvSpeed, tier3EnemyHP));
 				index += 3;
 			}
 			else {
-				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(4) + "/idle", enemyContainer.at(4) + "/run", tier3EnemyMvSpeed, tier3EnemyHP, 5, 20));
+				activeEnemies.push_back(new EnemyCharacter(enemyContainer.at(4) + "/idle", enemyContainer.at(4) + "/run", tier3EnemyMvSpeed, tier3EnemyHP));
 				index += 3;
 			}
 
@@ -54,7 +54,7 @@ private:
 		}
 	}
 
-	void applyDamage(unsigned int weapon_damage, const sf::FloatRect& weapon_bounds) 
+	void applyDamage(unsigned int weapon_damage, const sf::FloatRect& weapon_bounds, ItemContainer* potionContainer) 
 	{
 		auto it = activeEnemies.begin();
 
@@ -67,6 +67,25 @@ private:
 				if ((*it)->getCurrentHP() <= 0) 
 				{
 					EnemyCharacter* ptr = (*it);
+
+					int dropPotion = getRandomInRange(0, 100);
+					if (dropPotion <= healPotionChance) 
+					{
+						HealingPotion* potion = new HealingPotion;
+						potion->setPosition(ptr->getPosition());
+						potionContainer->addItem(potion);
+					}
+					else if (dropPotion <= speedPotionChance) {
+						SpeedPotion* potion = new SpeedPotion;
+						potion->setPosition(ptr->getPosition());
+						potionContainer->addItem(potion);
+					}
+					else if (dropPotion <= invincibilityPotionChance) {
+						InvincibilityPotion* potion = new InvincibilityPotion;
+						potion->setPosition(ptr->getPosition());
+						potionContainer->addItem(potion);
+					}
+
 					delete ptr;
 					it = activeEnemies.erase(it);
 				}
@@ -135,12 +154,12 @@ public:
 		}
 	}
 
-	void spawnEnemies(const std::vector<Room*> rooms, const Room* bossRoom, const Room* spawnRoom)
+	void spawnEnemies(const std::vector<Room*> rooms, const Room* bossRoom, const Room* spawnRoom, unsigned int bossHP, float bossMvSpeed)
 	{
 		for (const Room* room : rooms) 
 		{
 			if (room == bossRoom) {
-				boss = new EnemyCharacter(bossAnimPath + "/idle", bossAnimPath + "/run", 5, 5, 5, 5);
+				boss = new EnemyCharacter(bossAnimPath + "/idle", bossAnimPath + "/run", bossMvSpeed, bossHP, 30.f);
 				unsigned int x = getRandomInRange(room->getX() + 1.f, room->getX() + room->getWidth() - 1.f) * tileSize.x;
 				unsigned int y = getRandomInRange(room->getY() + 1.f, room->getY() + room->getHeight() - 1.f) * tileSize.y;
 
@@ -153,7 +172,7 @@ public:
 		}
 	}
 
-	void update(const float& dt, PlayerCharacter* player, CollisionController* cc) 
+	void update(const float& dt, PlayerCharacter* player, CollisionController* cc, ItemContainer* potionContainer)
 	{
 		for (EnemyCharacter* enemy : activeEnemies) {
 			enemy->update(dt, player);
@@ -162,7 +181,7 @@ public:
 		boss->update(dt, player);
 		cc->update(boss);
 		if (player->canAttack(dt)) {
-			applyDamage(player->getWeaponDamage(), player->getWeaponHitbox());
+			applyDamage(player->getWeaponDamage(), player->getWeaponHitbox(), potionContainer);
 		}
 	}
 
@@ -172,6 +191,20 @@ public:
 			v.push_back(enemy->getSprite());
 		}
 		v.push_back(boss->getSprite());
+		return v;
+	}
+
+	std::vector<sf::RectangleShape> getEnemyHealthbars() 
+	{
+		std::vector<sf::RectangleShape> v;
+		for (EnemyCharacter* enemy : activeEnemies) {
+			if (enemy->getCurrentHP() < enemy->getMaxHP()) {
+				v.push_back(enemy->getHealthbar());
+			}
+		}
+		if (boss->getCurrentHP() < boss->getMaxHP()) {
+			v.push_back(boss->getHealthbar());
+		}
 		return v;
 	}
 

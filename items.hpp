@@ -10,6 +10,8 @@ private:
 
 public:
 
+    virtual ~Item() {}
+
     Item(std::string texturePath)
     {
         texture.loadFromFile(texturePath);
@@ -32,6 +34,18 @@ public:
     HealingPotion() : Item(healPotionTexture) {}
 };
 
+class SpeedPotion : public Item {
+public:
+
+    SpeedPotion() : Item(speedPotionTexture) {}
+};
+
+class InvincibilityPotion : public Item {
+public:
+
+    InvincibilityPotion() : Item(invincibilityPotionTexture) {}
+};
+
 class ItemContainer {
 private:
 
@@ -52,6 +66,10 @@ public:
         }
         items.clear();
     }
+
+    void update(PlayerCharacter* player);
+
+    void addItem(Item* item) { items.push_back(item); }
 
     std::vector<sf::Sprite> getSprites()
     {

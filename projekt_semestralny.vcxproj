@@ -152,6 +152,8 @@
     <ClInclude Include="enemy_controller.hpp" />
     <ClInclude Include="collision_controller.hpp" />
     <ClInclude Include="includer.hpp" />
+    <ClInclude Include="interface_elements.hpp" />
+    <ClInclude Include="items.hpp" />
     <ClInclude Include="map_renderer.hpp" />
     <ClInclude Include="character.hpp" />
     <ClInclude Include="utilities.hpp" />
