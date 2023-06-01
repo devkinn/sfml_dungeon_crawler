@@ -112,16 +112,11 @@ public:
 		window.draw(*backgroundRenderer);
 		window.draw(*mapRenderer);
 
-		std::vector<sf::Sprite> enemySprites = enemyController->getEnemySprites();
-		for (sf::Sprite& sprite : enemySprites) {
-			window.draw(sprite);
-		}
-
 		std::vector<sf::Sprite> chestSprites = chestContainer->getChestSprites();
 		for (sf::Sprite& sprite : chestSprites) {
 			window.draw(sprite);
 		}
-
+		
 		std::vector<sf::Sprite> weaponSprites = weaponsOnGround->getWeaponSprites();
 		for (sf::Sprite& sprite : weaponSprites) {
 			window.draw(sprite);
@@ -132,17 +127,15 @@ public:
 			window.draw(sprite);
 		}
 
+		std::vector<sf::Sprite> enemySprites = enemyController->getEnemySprites();
+		for (sf::Sprite& sprite : enemySprites) {
+			window.draw(sprite);
+		}
+
 		std::vector<sf::RectangleShape> enemyHealthbars = enemyController->getEnemyHealthbars();
 		for (sf::RectangleShape& rect : enemyHealthbars) {
 			window.draw(rect);
 		}
-
-		sf::RectangleShape weaponH(sf::Vector2f(playerCharacter->getWeaponHitbox().width, playerCharacter->getWeaponHitbox().height));
-		weaponH.setPosition(sf::Vector2f(playerCharacter->getWeaponHitbox().left, playerCharacter->getWeaponHitbox().top));
-		weaponH.setOutlineThickness(1.f);
-		weaponH.setFillColor(sf::Color::Transparent);
-		weaponH.setOutlineColor(sf::Color::Blue);
-		window.draw(weaponH);
 
 		window.draw(playerCharacter->getSprite());
 		window.draw(playerCharacter->getWeaponSprite());
@@ -181,15 +174,15 @@ public:
 		if (generateLevel || currentDungeon == nullptr) {
 			if (currentLevel == 1) {
 				generateDungeon(dungeon1width, dungeon1height, dungeon1EnemiesDir, boss1HP, boss1MvSpeed);
-				createMap(dungeon1Tileset, background1Tileset, tileSize, 60, 80);
+				createMap(dungeon1Tileset, background1Tileset, tileSize, dungeon1width + 40, dungeon1height + 40);
 			}
 			else if (currentLevel == 2) {
 				generateDungeon(dungeon2width, dungeon2height, dungeon2EnemiesDir, boss2HP, boss2MvSpeed);
-				createMap(dungeon2Tileset, background2Tileset, tileSize, 80, 100);
+				createMap(dungeon2Tileset, background2Tileset, tileSize, dungeon2width + 40, dungeon2height + 40);
 			}
 			else if (currentLevel == 3) {
 				generateDungeon(dungeon3width, dungeon3height, dungeon3EnemiesDir, boss3HP, boss3MvSpeed);
-				createMap(dungeon3Tileset, background3Tileset, tileSize, 100, 120);
+				createMap(dungeon3Tileset, background3Tileset, tileSize, dungeon3width + 40, dungeon3height + 40);
 			}
 			else {
 				gameState = gameEndWin;

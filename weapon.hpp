@@ -81,6 +81,9 @@ public:
             //sprite.setPosition(interpolatedPosition);
             sprite.setRotation(interpolatedRotation);
         }
+        else {
+            sprite.setRotation(targetRotation);
+        }
     }
 
     void setTargetRotation(const float rotation) { targetRotation = rotation; }

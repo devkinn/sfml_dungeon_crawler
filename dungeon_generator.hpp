@@ -61,7 +61,9 @@ private:
 
 class BSPDungeon {
 private:
+
 	Node* root;
+
 	int width;
 	int height;
 
@@ -74,15 +76,25 @@ private:
 	bool chestRoom = false;
 
 	void splitNode(Node* node);
+
 	void splitHorizontal(Node* node);
+
 	void splitVertical(Node* node);
+
 	void deleteNode(Node* node);
+
 	void generateRooms(Node* node);
+
 	void generateCorridors(Node* node);
+
 	void pickSpawnRoom(Node* node);
+
 	void pickBossRoom(Node* node, const bool& pick);
+
 	void pickChestRoom(Node* node);
-	void reset() {
+
+	void reset() 
+	{
 		deleteNode(root);
 		for (auto corridor : corridors) delete corridor;
 		rooms.clear();
@@ -94,14 +106,23 @@ private:
 	}
 
 public:
+
 	BSPDungeon(int _width, int _height) : width(_width), height(_height), root(nullptr) {}
+
 	~BSPDungeon() { reset(); }
+
 	void generate();
+
 	std::vector<Room*> getRooms() const { return rooms; }
+
 	Room* getBossRoom() const { return bossRoom; }
+
 	Room* getSpawnRoom() const { return spawnRoom; }
+
 	std::vector<Corridor*> getCorridors() const { return corridors; }
+
 	std::vector<Room*> getChestRooms() const { return chestRooms; }
+
 	sf::Vector2f getStartingPosition() const { return sf::Vector2f((spawnRoom->x + spawnRoom->width / 2) * tileSize.x, (spawnRoom->y + spawnRoom->height / 2) * tileSize.y); }
 };
 
@@ -109,7 +130,7 @@ void BSPDungeon::generate()
 {
 	reset();
 
-	root = new Node(10, 10, width, height);
+	root = new Node(20, 20, width, height);
 
 	splitNode(root);
 	generateRooms(root);
@@ -217,7 +238,8 @@ void BSPDungeon::generateRooms(Node* node)
 	generateRooms(node->right);
 }
 
-void BSPDungeon::generateCorridors(Node* node) {
+void BSPDungeon::generateCorridors(Node* node) 
+{
 	if (node->left == nullptr || node->right == nullptr) return;
 
 	int start_x = node->left->x + (node->left->width / 2);
@@ -231,8 +253,10 @@ void BSPDungeon::generateCorridors(Node* node) {
 	generateCorridors(node->right);
 }
 
-void BSPDungeon::pickSpawnRoom(Node* node) {
+void BSPDungeon::pickSpawnRoom(Node* node) 
+{
 	if (spawnRoom != nullptr) return;
+
 	if (node->left == nullptr || node->right == nullptr) {
 		spawnRoom = node->room;
 		return;
@@ -248,8 +272,10 @@ void BSPDungeon::pickSpawnRoom(Node* node) {
 	}
 }
 
-void BSPDungeon::pickBossRoom(Node* node, const bool& pick) {
+void BSPDungeon::pickBossRoom(Node* node, const bool& pick) 
+{
 	if (bossRoom != nullptr) return;
+
 	if (node->left == nullptr || node->right == nullptr) {
 		bossRoom = node->room;
 		return;
@@ -263,15 +289,19 @@ void BSPDungeon::pickBossRoom(Node* node, const bool& pick) {
 	}
 }
 
-void BSPDungeon::pickChestRoom(Node* node) {
+void BSPDungeon::pickChestRoom(Node* node) 
+{
 	if (chestRoom) return;
-	if (node->left == nullptr || node->right == nullptr) {
+
+	if (node->left == nullptr || node->right == nullptr) 
+	{
 		if (node->room != bossRoom && node->room != spawnRoom) {
 			chestRooms.push_back(node->room);
 			chestRoom = true;
 		}
 		return;
 	}
+
 	pickChestRoom(node->left);
 	pickChestRoom(node->right);
 }

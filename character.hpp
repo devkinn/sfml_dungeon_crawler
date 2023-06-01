@@ -196,7 +196,7 @@ protected:
     sf::Time invincibilityEffectTime = sf::seconds(3);
 
     sf::Clock playerImmunityClock;
-    sf::Time playerImmunityTime = sf::seconds(2);
+    sf::Time playerImmunityTime = sf::seconds(3);
 
     unsigned int healingPotions = 0;
     unsigned int speedPotions = 0;
@@ -424,6 +424,7 @@ protected:
     sf::RectangleShape healthbar;
 
     float healthbarSize;
+    float healthbarYOffset;
 
     void calculateMoveDirection(const sf::Vector2f& playerPosition, const float& dt) 
     {
@@ -450,8 +451,8 @@ protected:
     bool playerDetected(const sf::FloatRect& playerBounds) { return playerBounds.intersects(getGlobalBounds()); }
 
 public:
-    EnemyCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints, float _healthbarSize = 12.f)
-        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), damage(1), healthbarSize(_healthbarSize)
+    EnemyCharacter(std::string _idleAnim, std::string _runAnim, float _movement_spd, int _hitPoints, float _healthbarSize = 12.f, float _healthbarYOffset = 18.f)
+        : Character(_idleAnim, _runAnim, _movement_spd, _hitPoints), damage(1), healthbarSize(_healthbarSize), healthbarYOffset(_healthbarYOffset)
     {
         int move_time = getRandomInRange(5, 20);
         int idle_time = getRandomInRange(0, 5);
@@ -485,7 +486,7 @@ public:
 
         float healthPercentage = (float)currentHitPoints / (float)maxHitPoints;
         healthbar.setSize(sf::Vector2f(healthbarSize * healthPercentage, 1));
-        healthbar.setPosition(sf::Vector2f(getPosition().x - healthbarSize / 2, getPosition().y - 18.f));
+        healthbar.setPosition(sf::Vector2f(getPosition().x - healthbarSize / 2, getPosition().y - healthbarYOffset));
     }
 
     sf::RectangleShape& getHealthbar() { return healthbar; }

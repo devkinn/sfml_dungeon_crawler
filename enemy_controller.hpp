@@ -159,7 +159,7 @@ public:
 		for (const Room* room : rooms) 
 		{
 			if (room == bossRoom) {
-				boss = new EnemyCharacter(bossAnimPath + "/idle", bossAnimPath + "/run", bossMvSpeed, bossHP, 30.f);
+				boss = new EnemyCharacter(bossAnimPath + "/idle", bossAnimPath + "/run", bossMvSpeed, bossHP, 30.f, 35.f);
 				unsigned int x = getRandomInRange(room->getX() + 1.f, room->getX() + room->getWidth() - 1.f) * tileSize.x;
 				unsigned int y = getRandomInRange(room->getY() + 1.f, room->getY() + room->getHeight() - 1.f) * tileSize.y;
 
